@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 lazy_static = "*"
-reqwest = { version = "*", features = ["stream"] }
+reqwest = { version = "*", features = ["stream", "json"] }
+serde = { version = "*", features = ["derive"] }
 tokio = { version = "*", features = ["fs"] }
