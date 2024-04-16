@@ -1,5 +1,5 @@
 pub mod bunny_file;
-pub mod edge_storage;
+pub mod bunny_storage;
 mod error;
 
 pub use crate::error::{Error, Result};
