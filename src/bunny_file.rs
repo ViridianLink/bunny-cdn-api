@@ -29,7 +29,7 @@ pub struct BunnyFile {
     #[serde(rename = "StorageZoneId")]
     pub storage_zone_id: i32,
     #[serde(rename = "Checksum")]
-    pub checksum: String,
+    pub checksum: Option<String>,
     #[serde(rename = "ReplicatedZones")]
-    pub replicated_zones: String,
+    pub replicated_zones: Option<String>,
 }
