@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use reqwest::{Client, Response};
 use tokio::fs::File;
 
-use crate::bunny_file::BunnyFile;
+use crate::response::ListResponse;
 use crate::{Error, Result};
 
 lazy_static! {
@@ -80,7 +80,7 @@ impl BunnyStorage {
         unimplemented!("Delete not implemented")
     }
 
-    pub async fn list(&self, storage_path: &str) -> Result<Vec<BunnyFile>> {
+    pub async fn list(&self, storage_path: &str) -> Result<ListResponse> {
         let url = format!(
             "https://{}/{}/{}",
             self.endpoint, self.storage_name, storage_path
@@ -92,6 +92,10 @@ impl BunnyStorage {
             .send()
             .await?;
 
-        Ok(response.json().await?)
+        if response.status().is_success() {
+            Ok(ListResponse::Success(response.json().await?))
+        } else {
+            Ok(ListResponse::Error(response.text().await?))
+        }
     }
 }
