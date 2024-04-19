@@ -6,6 +6,7 @@ pub enum Error {
     Reqwest(reqwest::Error),
     InvalidRegion(String),
     InvalidPath(std::path::PathBuf),
+    ListResponseError(String),
 }
 
 impl std::fmt::Display for Error {
@@ -15,6 +16,7 @@ impl std::fmt::Display for Error {
             Error::Reqwest(err) => write!(f, "Reqwest error: {}", err),
             Error::InvalidRegion(region) => write!(f, "Invalid region: {}", region),
             Error::InvalidPath(path) => write!(f, "Invalid path: {:?}", path),
+            Error::ListResponseError(msg) => write!(f, "List response error: {}", msg),
         }
     }
 }
@@ -28,5 +30,11 @@ impl From<std::io::Error> for Error {
 impl From<reqwest::Error> for Error {
     fn from(error: reqwest::Error) -> Self {
         Error::Reqwest(error)
+    }
+}
+
+impl From<std::path::PathBuf> for Error {
+    fn from(path: std::path::PathBuf) -> Self {
+        Error::InvalidPath(path)
     }
 }

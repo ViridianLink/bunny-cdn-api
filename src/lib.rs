@@ -1,7 +1,6 @@
 pub mod bunny_file;
 pub mod bunny_storage;
 mod error;
-mod response;
 
 pub use bunny_storage::BunnyStorage;
 pub use error::{Error, Result};
