@@ -1,8 +1,10 @@
 use std::{collections::HashMap, path::Path};
 
 use lazy_static::lazy_static;
-use reqwest::{Client, Response};
+use reqwest::header::{HeaderMap, HeaderValue};
+use reqwest::{Body, Client, ClientBuilder, Response};
 use tokio::fs::File;
+use tokio_util::io::ReaderStream;
 
 use crate::bunny_file::BunnyFile;
 use crate::{Error, Result};
@@ -24,24 +26,25 @@ lazy_static! {
 }
 
 pub struct BunnyStorage {
+    client: Client,
     storage_name: String,
-    api_key: String,
     endpoint: String,
 }
 
 impl BunnyStorage {
-    pub fn new(
-        storage_name: impl Into<String>,
-        api_key: impl Into<String>,
-        region: &str,
-    ) -> Result<Self> {
+    pub fn new(storage_name: impl Into<String>, api_key: &str, region: &str) -> Result<Self> {
         let endpoint = ENDPOINTS
             .get(region)
             .ok_or_else(|| Error::InvalidRegion(region.to_string()))?;
 
+        let mut headers = HeaderMap::new();
+        headers.insert("Accesskey", HeaderValue::from_str(api_key)?);
+
+        let client = ClientBuilder::new().default_headers(headers).build()?;
+
         Ok(Self {
+            client,
             storage_name: storage_name.into(),
-            api_key: api_key.into(),
             endpoint: endpoint.to_string(),
         })
     }
@@ -63,13 +66,17 @@ impl BunnyStorage {
         let file = File::open(file_path).await?;
         let file_size = file.metadata().await?.len();
 
+        let stream = ReaderStream::new(file);
+
+        let body = Body::wrap_stream(stream);
+
         println!("Uploading to: {}", url);
 
-        let response = Client::new()
+        let response = self
+            .client
             .put(url)
-            .header("Accesskey", &self.api_key)
             .header("Content-Length", file_size)
-            .body(file)
+            .body(body)
             .send()
             .await?;
 
@@ -86,11 +93,7 @@ impl BunnyStorage {
             self.endpoint, self.storage_name, storage_path
         );
 
-        let response = Client::new()
-            .get(url)
-            .header("Accesskey", &self.api_key)
-            .send()
-            .await?;
+        let response = self.client.get(url).send().await?;
 
         if response.status().is_success() {
             Ok(response.json().await?)
