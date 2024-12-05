@@ -10,7 +10,7 @@ lazy_static = { version = "*", default-features = false }
 reqwest = { version = "*", default-features = false, features = [
     "json",
     "stream",
-    "http2",
+    "default-tls",
 ] }
 serde = { version = "*", default-features = false, features = ["derive"] }
 tokio-util = { version = "*", default-features = false, features = ["io"] }
