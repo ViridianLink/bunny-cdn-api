@@ -1,4 +1,5 @@
-use std::{collections::HashMap, path::Path};
+use std::collections::HashMap;
+use std::path::Path;
 
 use lazy_static::lazy_static;
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -38,9 +39,12 @@ impl BunnyStorage {
             .ok_or_else(|| Error::InvalidRegion(region.to_string()))?;
 
         let mut headers = HeaderMap::new();
-        headers.insert("Accesskey", HeaderValue::from_str(api_key)?);
+        headers.insert("Accesskey", HeaderValue::from_str(api_key).unwrap());
 
-        let client = ClientBuilder::new().default_headers(headers).build()?;
+        let client = ClientBuilder::new()
+            .default_headers(headers)
+            .build()
+            .unwrap();
 
         Ok(Self {
             client,
@@ -63,8 +67,8 @@ impl BunnyStorage {
             self.endpoint, self.storage_name, storage_path
         );
 
-        let file = File::open(file_path).await?;
-        let file_size = file.metadata().await?.len();
+        let file = File::open(file_path).await.unwrap();
+        let file_size = file.metadata().await.unwrap().len();
 
         let stream = ReaderStream::new(file);
 
@@ -78,7 +82,8 @@ impl BunnyStorage {
             .header("Content-Length", file_size)
             .body(body)
             .send()
-            .await?;
+            .await
+            .unwrap();
 
         Ok(response)
     }
@@ -93,12 +98,12 @@ impl BunnyStorage {
             self.endpoint, self.storage_name, storage_path
         );
 
-        let response = self.client.get(url).send().await?;
+        let response = self.client.get(url).send().await.unwrap();
 
         if response.status().is_success() {
-            Ok(response.json().await?)
+            Ok(response.json().await.unwrap())
         } else {
-            Err(Error::ListResponseError(response.text().await?))
+            Err(Error::ListResponseError(response.text().await.unwrap()))
         }
     }
 }
