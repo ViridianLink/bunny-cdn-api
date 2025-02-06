@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use futures::StreamExt;
 use lazy_static::lazy_static;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Body, Client, ClientBuilder, Response};
 use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 use tokio_util::io::ReaderStream;
 
 use crate::bunny_file::BunnyFile;
@@ -53,8 +55,21 @@ impl BunnyStorage {
         })
     }
 
-    pub fn download(&self, file: &str) -> Result<()> {
-        unimplemented!("Download not implemented")
+    pub async fn download(&self, src_file: &str, dest_file: &str) {
+        let url = format!(
+            "https://{}/{}/{}",
+            self.endpoint, self.storage_name, src_file
+        );
+
+        let response = self.client.get(url).send().await.unwrap();
+
+        if response.status().is_success() {
+            let mut file = File::create(dest_file).await.unwrap();
+            let mut stream = response.bytes_stream();
+            while let Some(Ok(chunk)) = stream.next().await {
+                file.write_all(&chunk).await.unwrap();
+            }
+        }
     }
 
     pub async fn upload(

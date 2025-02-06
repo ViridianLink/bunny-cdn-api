@@ -17,3 +17,7 @@ reqwest = { version = "*", default-features = false, features = [
 serde = { version = "*", default-features = false, features = ["derive"] }
 tokio-util = { version = "*", default-features = false, features = ["io"] }
 tokio = { version = "*", default-features = false, features = ["fs"] }
+futures = { version = "*", default-features = false }
+
+[dev-dependencies]
+tokio = { version = "*", default-features = false, features = ["full"] }
