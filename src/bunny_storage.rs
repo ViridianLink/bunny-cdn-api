@@ -57,6 +57,10 @@ impl BunnyStorage {
         })
     }
 
+    pub fn raw(&self) -> &Client {
+        &self.client
+    }
+
     pub fn endpoint(&self) -> &str {
         &self.endpoint
     }
