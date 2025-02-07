@@ -55,7 +55,7 @@ impl BunnyStorage {
         })
     }
 
-    pub async fn download(&self, src_file: &str, dest_file: &str) {
+    pub async fn download(&self, src_file: &str, dest_file: &str, download_progress: &mut u8) {
         let url = format!(
             "https://{}/{}/{}",
             self.endpoint, self.storage_name, src_file
@@ -64,14 +64,17 @@ impl BunnyStorage {
         let response = self.client.get(url).send().await.unwrap();
 
         if response.status().is_success() {
+            let total_size = response.content_length().unwrap_or(0);
+
             let mut file = File::create(dest_file).await.unwrap();
             let mut stream = response.bytes_stream();
             while let Some(Ok(chunk)) = stream.next().await {
                 file.write_all(&chunk).await.unwrap();
+                *download_progress =
+                    ((file.metadata().await.unwrap().len() / total_size) * 100) as u8;
             }
         }
     }
-
     pub async fn upload(
         &self,
         file_path: impl AsRef<Path>,
