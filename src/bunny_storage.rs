@@ -57,7 +57,7 @@ impl BunnyStorage {
         })
     }
 
-    pub async fn download(&self, src_file: &str, dest_file: &str, progress: Arc<AtomicU8>) {
+    pub async fn download(&self, src_file: &str, dest_file: &Path, progress: Arc<AtomicU8>) {
         let url = format!(
             "https://{}/{}/{}",
             self.endpoint, self.storage_name, src_file
