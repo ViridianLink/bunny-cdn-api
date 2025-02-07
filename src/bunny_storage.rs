@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::path::Path;
+use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::Arc;
 
 use futures::StreamExt;
 use lazy_static::lazy_static;
@@ -55,7 +57,7 @@ impl BunnyStorage {
         })
     }
 
-    pub async fn download(&self, src_file: &str, dest_file: &str, download_progress: &mut u8) {
+    pub async fn download(&self, src_file: &str, dest_file: &str, progress: Arc<AtomicU8>) {
         let url = format!(
             "https://{}/{}/{}",
             self.endpoint, self.storage_name, src_file
@@ -70,8 +72,8 @@ impl BunnyStorage {
             let mut stream = response.bytes_stream();
             while let Some(Ok(chunk)) = stream.next().await {
                 file.write_all(&chunk).await.unwrap();
-                *download_progress =
-                    ((file.metadata().await.unwrap().len() / total_size) * 100) as u8;
+                let percent = (file.metadata().await.unwrap().len() / total_size) * 100;
+                progress.store(percent as u8, Ordering::Relaxed);
             }
         }
     }
