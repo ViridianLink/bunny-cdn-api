@@ -19,3 +19,9 @@ pub struct BunnyFile {
     pub checksum: Option<String>,
     pub replicated_zones: Option<String>,
 }
+
+impl BunnyFile {
+    pub fn full_path(&self) -> String {
+        format!("{}{}", self.path, self.object_name)
+    }
+}
