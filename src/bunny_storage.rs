@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::Arc;
 
 use futures::StreamExt;
 use lazy_static::lazy_static;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Body, Client, ClientBuilder, Response};
+use serde::Serialize;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use tokio_util::io::ReaderStream;
@@ -131,4 +130,22 @@ impl BunnyStorage {
             Err(Error::ListResponseError(response.text().await.unwrap()))
         }
     }
+
+    pub async fn purge_cache(&self, subdomain: &str, file: &str) {
+        let purge = PurgeRequest {
+            url: format!("https://{}.b-cdn.net/{}", subdomain, file),
+        };
+
+        self.client
+            .post("https://api.bunny.net/purge")
+            .json(&purge)
+            .send()
+            .await
+            .unwrap();
+    }
+}
+
+#[derive(Serialize)]
+struct PurgeRequest {
+    url: String,
 }
