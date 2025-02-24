@@ -5,7 +5,6 @@ use futures::StreamExt;
 use lazy_static::lazy_static;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Body, Client, ClientBuilder, Response};
-use serde::Serialize;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use tokio_util::io::ReaderStream;
@@ -112,8 +111,10 @@ impl BunnyStorage {
         Ok(response)
     }
 
-    pub fn delete(&self, file: &str) -> Result<()> {
-        unimplemented!("Delete not implemented")
+    pub async fn delete(&self, file: &str) -> Response {
+        let url = format!("https://{}/{}/{}", self.endpoint, self.storage_name, file);
+
+        self.client.delete(url).send().await.unwrap()
     }
 
     pub async fn list(&self, storage_path: &str) -> Result<Vec<BunnyFile>> {
@@ -130,22 +131,4 @@ impl BunnyStorage {
             Err(Error::ListResponseError(response.text().await.unwrap()))
         }
     }
-
-    pub async fn purge_cache(&self, subdomain: &str, file: &str) {
-        let purge = PurgeRequest {
-            url: format!("https://{}.b-cdn.net/{}", subdomain, file),
-        };
-
-        self.client
-            .post("https://api.bunny.net/purge")
-            .json(&purge)
-            .send()
-            .await
-            .unwrap();
-    }
-}
-
-#[derive(Serialize)]
-struct PurgeRequest {
-    url: String,
 }
